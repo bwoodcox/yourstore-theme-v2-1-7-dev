@@ -1,0 +1,85 @@
+<div class="row">
+  {% for product in collections.meet-the-cookies.products %}
+  	{% assign cookie_title = product.title | split: ' ' | first | downcase %}
+  	<div class="col-sm-4 col-md-4 col-lg-4 col-xl-4">
+	  <div class="cookie-selector row">
+        <input id="{{ cookie_title }}" type="radio" value="add-dozen"/>
+        <label for="{{ cookie_title }}" class="cookie build-tooltip" style="background: url({{ product.featured_image | product_img_url: '180x180' }}) 100% 100% no-repeat;">
+      	  <div class="banner title-background">{{ product.title }}</div>
+          <div class="cookie-quantity invisible">0</div>
+        </label>
+      	<div class="build-tooltiptext">Click to add a dozen to your box.</div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<script type="text/javascript">
+  $(function() {
+    var isBoxFull = false;
+    var totalQty = {{ product.selected_variant.barcode }};
+    var currentQty = 0;
+    var labelElement, cookieQtyElement, val;
+
+    $(".cookie-selector input").click(function() {
+        labelElement = $("label[for='"+this.id+"']");
+        cookieQtyElement = labelElement.children().last();
+        val = parseInt(cookieQtyElement.text());
+
+      if (!isBoxFull) {
+        val++;
+
+        switch(val) {
+          case 1:
+            cookieQtyElement.addClass("one");
+            cookieQtyElement.removeClass("qty-default");
+            break;
+          case 10:
+            cookieQtyElement.addClass("ten");
+            cookieQtyElement.removeClass("qty-default");
+            break;
+          default:
+            cookieQtyElement.addClass("qty-default");
+            cookieQtyElement.removeClass("one");
+            cookieQtyElement.removeClass("ten");
+        };
+
+        currentQty++;
+        currentQty == totalQty ? isBoxFull = true : isBoxFull = false;
+        $("#selected-cookie-list").append("<div>One dozen "+labelElement.attr('for').toUpperCase()+".  <div id='remove' class='remove-cookie' data-cookie-name='"+labelElement.attr('for')+"'></div></div>");
+        cookieQtyElement.text(val);
+        cookieQtyElement.removeClass("invisible");
+      } else {
+        alert("You need a bigger box! To add a dozen, pick a bigger box or remove a dozen from your current box.");
+        if (val == 0) $(this).removeAttr("checked");
+      };
+    });
+
+    $(document).on("click", "div.remove-cookie", function() {
+      labelElement = $("label[for='"+this.dataset.cookieName+"']");
+      cookieQtyElement = labelElement.children().last();
+      val = parseInt(cookieQtyElement.text());
+      val--;
+
+      switch(val) {
+        case 0:
+          cookieQtyElement.removeClass("one");
+          cookieQtyElement.addClass("invisible");
+          $("#"+this.dataset.cookieName).removeAttr("checked");
+          break;
+        case 1:
+          cookieQtyElement.addClass("one");
+          cookieQtyElement.removeClass("qty-default");
+          break;
+        default:
+          cookieQtyElement.addClass("qty-default");
+          cookieQtyElement.removeClass("one");
+      };
+
+      cookieQtyElement.text(val);
+      currentQty--;
+      isBoxFull = false;
+      $(this).parent().remove();
+    });
+  });
+</script>
