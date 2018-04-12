@@ -86,6 +86,22 @@ Shopify.addItemFromForm = function(form_id, variant_id,callback) {
     jQuery.ajax(params);
 };
 
+Shopify.removeItemByLine = function(line, callback) {
+  var params = {
+    type: "POST",
+    url: "/cart/change.js",
+    data: "quantity=0&line=" + line,
+    dataType: "json",
+    success: function(line) {
+      "function" == typeof callback ? callback(line) : Shopify.onCartUpdate(line)
+    },
+    error: function(line, callback) {
+      Shopify.onError(line, callback)
+    }
+  };
+  jQuery.ajax(params);
+};
+
 /* user functions */
 
 Shopify.addItemFromFormStart = function(form, product_id) {
@@ -113,16 +129,57 @@ Shopify.cartUpdateInfo = function(cart, cart_cell_id) {
 
       jQuery.each(cart, function(key, value) {
         if (key === 'items') {
-			
+
           if (value.length) {
             jQuery('.cart_message').hide();
-            
+
             var table = jQuery(cart_cell_id);
             jQuery.each(value, function(i, item) {
               if(i > 19){
                   return false;
               }
-              jQuery('<li class="cart__item"><div class="cart__item__image pull-left"><a href="' + item.url + '"><img src="' + item.image + '" alt=""/></a> </div><div class="cart__item__control"><div class="cart__item__delete"><a href="javascript:void(0);" onclick="Shopify.removeItem(' + item.variant_id + ')" class="icon icon-delete"><span>'+jQuery(".cart_messages .delete").text()+'</span></a></div></div><div class="cart__item__info"><div class="cart__item__info__title"><h2><a href="' + item.url + '">' + item.title + '</a></h2></div><div class="cart__item__info__price"><span class="info-label">'+jQuery(".cart_messages .price").text()+'</span><span>' + Shopify.formatMoney(item.price, formatMoney) + '</span></div><div class="cart__item__info__price" style="right: 35%;"><span class="info-label">'+jQuery(".cart_messages .qty").text()+'</span><span>' + item.quantity + '</span></div></div></li>').appendTo(table);
+              var line = i + 1;
+              var options_block;
+              if (item.properties) {
+                options_block = '<div class="cart__meta-text">';
+                Object.keys(item.properties).forEach(function(key) {
+                  options_block += '<div class="cart-property"><span class="hulkapps_option_name">' + key + '</span>';
+                  if (item.properties[key].includes(',')) {
+                    options_block += '<div>';
+                    item.properties[key].split(",").forEach(function(value) {
+                      options_block += value + '<br />';
+                    });
+                    options_block += '</div>';
+                  } else if (item.properties[key].includes("/uploads/") || item.properties[key].includes(".jpg") ||
+                            item.properties[key].includes(".png") || item.properties[key].includes(".jpeg") ||
+                            item.properties[key].includes(".svg")) {
+                              if (item.properties[key].includes("_|_")) {
+                                var prop_val = item.properties[key].split("_|_");
+                                var swatch_val = prop_val[0].replace("http://","")
+                                  .replace(/&amp;amp;amp;/g,"&amp;amp;")
+                                  .replace(/&amp;amp;lt;/g,"<")
+                                  .replace(/&amp;amp;gt;/g,">");
+                                var swatch_image = prop_val[1];
+                                var data_original_title = '<div style=\'padding:5px 0px; text-align:center;width:170px;\'><div class=\'swatch_tooltip_title\'>' + swatch_val +
+                                '</div><div class=\'swatch_tooltip_data\' style=\'width:100%;height:150px;background-image:url(' + swatch_image +
+                                ');background-size:cover;background-position: center center;\'></div></div>';
+                                options_block += '<span class="hulkapps_option_value" style="cursor: pointer;"><div style="width:35px;height:35px;background-image:url(' + swatch_image +
+                                  ');background-size:cover;background-position: center center;" title="" data-placement="top" data-original-title="' + data_original_title + '" data-html="true" data-toggle="tooltip"></div></span><br />';
+                              } else {
+                                options_block += '<span class="hulkapps_option_value"><a class="lightbox" href="' + item.properties[key] + '">Uploaded File</a></span><br />';
+                              }
+                  } else {
+                    options_block += '<span class="hulkapps_option_value">' + item.properties[key].replace(/&amp;amp;amp;/g,"&amp;amp;")
+                      .replace(/&amp;amp;lt;/g,"<")
+                      .replace(/&amp;amp;gt;/g,">") + '</span><br />';
+                  }
+                  options_block += "</div>";
+                });
+                options_block += "</div>";
+              }
+              jQuery('<li class="cart__item"><div class="cart__item__image pull-left"><img src="' + item.image + '" alt=""/> </div><div class="cart__item__control"><div class="cart__item__delete"><a href="javascript:void(0);" onclick="Shopify.removeItemByLine(' + line + ');" class="icon icon-delete"><span>'+jQuery(".cart_messages .delete").text()+
+              '</span></a></div></div><div class="cart__item__info"><div class="cart__item__info__title"><h2 class="title-center">' + item.title + options_block + '<div class="cart__meta-text"></h2></div><div class="cart__item__info__price"><span class="info-label">'+jQuery(".cart_messages .price").text()+'</span><span>' + Shopify.formatMoney(item.price, formatMoney) + '</span></div><div class="cart__item__info__price" style="right: 35%;"><span class="info-label">'+
+              jQuery(".cart_messages .qty").text()+'</span><span>' + item.quantity + '</span></div></div></li>').appendTo(table);
             });
           }
           else {
@@ -130,6 +187,7 @@ Shopify.cartUpdateInfo = function(cart, cart_cell_id) {
           }
         }
       });
+      $('[data-toggle="tooltip"]').tooltip();
     }
   }
 
@@ -138,6 +196,15 @@ Shopify.cartUpdateInfo = function(cart, cart_cell_id) {
 
   jQuery('.currency .active').trigger('click');
 }
+
+// for (var j = 0; j < Object.keys(item.properties).length; j++) {
+//   option_key = Object.keys(item.properties)[j];
+//   item_title = item_title.concat('<br />',option_key.replace('-',' '),':');
+//   values = item.properties[option_key].split(',');
+//   for (var k = 0; k < values.length; k++) {
+//     item_title = item_title.concat('<br />',values[k]);
+//   }
+// }
 
 //Utils
 function changeHtmlValue (cell, value) {

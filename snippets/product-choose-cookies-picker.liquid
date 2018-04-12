@@ -1,14 +1,19 @@
 <div class="row">
-  {% for product in collections.meet-the-cookies.products %}
+  {% assign products = collections.meet-the-cookies.products | sort: 'title' %}
+  {% for product in products %}
   	{% assign cookie_title = product.title | split: ' ' | first | downcase %}
   	<div class="col-sm-4 col-md-4 col-lg-4 col-xl-4">
 	  <div class="cookie-selector row">
         <input id="{{ cookie_title }}" type="radio" value="add-dozen"/>
         <label for="{{ cookie_title }}" class="cookie build-tooltip" style="background: url({{ product.featured_image | product_img_url: '180x180' }}) 100% 100% no-repeat;">
-      	  <div class="banner title-background">{{ product.title }}</div>
-          <div class="cookie-quantity invisible">0</div>
+          <!-- <div class="banner title-background">{{ product.title }}</div> -->
+          <div class="ribbon"><span>{{ product.title }}</span></div>
+          <button type="button" class="btn btn--ys btn--xs btn-add"><span class="icon icon-add"></span></button>
+          <button type="button" class="btn btn--ys btn--xs btn-add-dozen"><span class="icon icon-add"></span>Dozen</button>
+          <button type="button" class="btn btn--ys btn--xs btn-subtract invisible"><span class="icon icon-remove"></span></button>
+          <div id="{{ cookie_title }}-qty" class="cookie-quantity invisible">0</div>
         </label>
-      	<div class="build-tooltiptext">Click to add a dozen to your box.</div>
+      	<!--div class="build-tooltiptext">Click to add a dozen to your box.</div-->
       </div>
     </div>
   {% endfor %}
@@ -16,70 +21,94 @@
 
 <script type="text/javascript">
   $(function() {
-    var isBoxFull = false;
-    var totalQty = {{ product.selected_variant.barcode }};
+    var ONE_DOZEN = 12;
+    var totalQty = {{ product.selected_variant.barcode }} * ONE_DOZEN;
     var currentQty = 0;
-    var labelElement, cookieQtyElement, val;
+    var cookieQtyElement, val;
 
-    $(".cookie-selector input").click(function() {
-        labelElement = $("label[for='"+this.id+"']");
-        cookieQtyElement = labelElement.children().last();
-        val = parseInt(cookieQtyElement.text());
-
-      if (!isBoxFull) {
-        val++;
-
-        switch(val) {
-          case 1:
-            cookieQtyElement.addClass("one");
-            cookieQtyElement.removeClass("qty-default");
-            break;
-          case 10:
-            cookieQtyElement.addClass("ten");
-            cookieQtyElement.removeClass("qty-default");
-            break;
-          default:
-            cookieQtyElement.addClass("qty-default");
-            cookieQtyElement.removeClass("one");
-            cookieQtyElement.removeClass("ten");
-        };
-
-        currentQty++;
-        currentQty == totalQty ? isBoxFull = true : isBoxFull = false;
-        $("#selected-cookie-list").append("<div>One dozen "+labelElement.attr('for').toUpperCase()+".  <div id='remove' class='remove-cookie' data-cookie-name='"+labelElement.attr('for')+"'></div></div>");
-        cookieQtyElement.text(val);
-        cookieQtyElement.removeClass("invisible");
-      } else {
-        alert("You need a bigger box! To add a dozen, pick a bigger box or remove a dozen from your current box.");
-        if (val == 0) $(this).removeAttr("checked");
-      };
+    $(".cookie-selector button.btn-add").click(function() {
+      cookieQtyElement = $(this).siblings().last();
+      val = parseInt(cookieQtyElement.text());
+      val++;
+      updateAndAlignQuantity(this);
+      currentQty++;
+      updateViewElements($(this));
+      cookieQtyElement.text(val);
+      cookieQtyElement.removeClass("invisible");
     });
 
-    $(document).on("click", "div.remove-cookie", function() {
-      labelElement = $("label[for='"+this.dataset.cookieName+"']");
-      cookieQtyElement = labelElement.children().last();
+    $(document).on("click", "button.btn-subtract", function() {
+      cookieQtyElement = $(this).siblings().last();
       val = parseInt(cookieQtyElement.text());
       val--;
-
-      switch(val) {
-        case 0:
-          cookieQtyElement.removeClass("one");
-          cookieQtyElement.addClass("invisible");
-          $("#"+this.dataset.cookieName).removeAttr("checked");
-          break;
-        case 1:
-          cookieQtyElement.addClass("one");
-          cookieQtyElement.removeClass("qty-default");
-          break;
-        default:
-          cookieQtyElement.addClass("qty-default");
-          cookieQtyElement.removeClass("one");
-      };
-
-      cookieQtyElement.text(val);
+      updateAndAlignQuantity(this);
       currentQty--;
-      isBoxFull = false;
-      $(this).parent().remove();
+      updateViewElements($(this));
+      cookieQtyElement.text(val);
     });
+
+    $(".cookie-selector button.btn-add-dozen").click(function() {
+      cookieQtyElement = $(this).siblings().last();
+      val = parseInt(cookieQtyElement.text());
+
+      val = val + ONE_DOZEN;
+      updateAndAlignQuantity(this);
+      currentQty = currentQty + ONE_DOZEN;
+      updateViewElements($(this));
+      cookieQtyElement.text(val);
+      cookieQtyElement.removeClass("invisible");
+    });
+
+    var updateViewElements = function(element) {
+      var isBoxFull = currentQty == totalQty ? true : false;
+      var canAddDozen = totalQty - currentQty >= ONE_DOZEN ? true : false;
+
+      if (element.hasClass("btn-add")) {
+        element.siblings(".btn-subtract").removeClass("invisible");
+        if (isBoxFull) {
+          $("button.btn-add").addClass("invisible");
+          $("button.btn-add-dozen").addClass("invisible");
+          $(".addtocart").removeClass("invisible");
+        }
+        if (!canAddDozen) $("button.btn-add-dozen").addClass("invisible");
+      } else if (element.hasClass("btn-add-dozen")) {
+        element.siblings(".btn-subtract").removeClass("invisible");
+        if (!canAddDozen) $("button.btn-add-dozen").addClass("invisible");
+        if (isBoxFull) {
+          $("button.btn-add").addClass("invisible");
+          $(".addtocart").removeClass("invisible");
+        }
+      } else if (element.hasClass("btn-subtract")) {
+        $("button.btn-add").removeClass("invisible");
+        $(".addtocart").addClass("invisible");
+        if (canAddDozen) $("button.btn-add-dozen").removeClass("invisible");
+      }
+
+      $("#selected-cookie-list").children().first().replaceWith("<div>"+currentQty+" of "+totalQty+" cookies filled.</div>");
+      return isBoxFull;
+    };
+    var updateAndAlignQuantity = function(element) {
+      if (val == 0) {
+        cookieQtyElement.removeClass("one");
+        cookieQtyElement.addClass("invisible");
+        $(element).addClass("invisible");
+        $("#"+element.dataset.cookieName).removeAttr("checked");
+      } else if (val == 1) {
+        cookieQtyElement.addClass("one");
+        cookieQtyElement.removeClass("single-digit");
+      } else if (val > 1 && val <= 9) {
+        cookieQtyElement.addClass("single-digit");
+        cookieQtyElement.removeClass("one");
+        cookieQtyElement.removeClass("ten");
+      } else if (val >= 10 && val <= 19) {
+        cookieQtyElement.addClass("ten");
+        cookieQtyElement.removeClass("twenty");
+        cookieQtyElement.removeClass("single-digit");
+      } else {
+        cookieQtyElement.addClass("twenty");
+        cookieQtyElement.removeClass("ten");
+        cookieQtyElement.removeClass("single-digit");
+      }
+    };
   });
 </script>

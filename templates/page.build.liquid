@@ -5,8 +5,10 @@
 <script>
   $(function() {
     $("input[type=radio]").click(function() {
+      // if (sessionStorage.chooser == 1) $("#variant-form").action = "/products/cookie-box-we-choose";
       $("#variant-form").submit();
     });
+    // if (!sessionStorage.chooser) location.replace("/pages/who-chooses");
   });
 </script>
 
@@ -14,10 +16,12 @@
   <div class="row">
     <aside class="{{ collection_grid }}" id="centerColumn">
       <div class="title-box text-center"><h2 class="title-sides">How Many Do You Want?</h2></div>
+      <div class="collections-description text-center">Tell us how many of our delicious, handmade cookies you want.</div>
+      <div class="filters-row"></div>
       <div class="product-listing row">
         <form action="/products/cookie-box" method="get" id="variant-form">
           {% for variant in current_product.variants %}
-            {% assign amount = variant.title | split: ' ' | first | downcase %}
+            {% assign amount = variant.sku` | split: '_' | first | downcase %}
             <div class="{{ product_grid }}">
               <div class="product amount-selector">
                 <input id="{{ amount }}-dozen" type="radio" name="variant" value="{{ variant.id }}"/>
@@ -30,6 +34,7 @@
           {% endfor %}
         </form>
       </div>
+      <div class="fill-a-box-footer-msg text-center">For orders over 5 dozen, please call us at 801.414.1792.</div>
     </aside>
   </div>
 </div>

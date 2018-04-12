@@ -39,12 +39,18 @@
     <span>{{ product.price_min | money }}</span><span class="price-box__old"></span>
     {% endif %}
   </div>
+  {% if cart.attributes["chooser"] == "we-choose" %}
+    <div id="we-choose-message" class="visible">We'll choose an assortment of our cookies to include in you box.</div>
+  {% else %}
+    <div id="selected-cookie-list" class="visible">
+      <div>0 of {{ product.selected_variant.barcode | times: 12 | floor }} cookies filled.</div>
+       <button type="button" class="btn btn--xs btn--ys btn-change-box" onclick="window.location.href='/pages/fill-a-box'">Change box size</button>
+    </div>
+  {% endif %}
 
-  <div id="selected-cookie-list" class="visible"></div>
-
-  {% if settings.show_product_rating %}<div class="product-info__review">
+  <!-- {% if settings.show_product_rating %}<div class="product-info__review">
   <div class="rating"><span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span></div>
-  </div>{% else %}<br>{% endif %}
+  </div>{% else %}<br>{% endif %} -->
 
   {% if product.description contains "[custom_html]" %}
   <div class="divider divider--xs product-info__divider hidden-xs"></div>
@@ -138,30 +144,30 @@
     <input type="hidden" name="id" value="{{ product.variants[0].id }}" />
     {% endunless %}
 
+    {% include 'hulkcode_options' %}
+
     <div class="divider divider--sm"></div>
     <div class="wrapper">
       <div class="pull-left hide"><span class="qty-label">{{ 'products.product.quantity' | t }}</span></div>
       <div class="pull-left hide"><input type="text" name="quantity" class="input--ys qty-input pull-left" value="1"></div>
-      <div class="pull-left"><button type="submit" class="btn btn--ys btn--xxl addtocart">{{ 'products.product.add_to_cart_html' | t }}</button></div>
+      <div class="pull-left"><button type="submit" class="btn btn--ys btn--xxl {% if cart.attributes['chooser'] != 'we-choose' %}invisible {% endif %}addtocart">{{ 'products.product.add_to_cart_html' | t }}</button></div>
     </div>
 
-    <input type="hidden" id="box-contents" name="properties[box-contents]">
+    <input type="hidden" id="box-contents" name="properties[Box Contents]">
     <script>
-      jQuery('.addtocart').click(function(e) {
-        e.preventDefault();
-
-        var boxCapacity = {{ product.selected_variant.barcode }};
-        var selectedCookies = $("#selected-cookie-list").children();
-
-        if (selectedCookies.length == boxCapacity) {
-          $("#box-contents").val($("#selected-cookie-list").children().text().replace(/ {2,}(?=.* {2,})/g, ", ").trim());
-
-          //Shopify.addItemFromFormStart('add-item-form', {{ product.id }});
-          $("#add-item-form").submit();
-        } else {
-          alert("Your box isn't full! Please select another one of our delicious cookies!");
-        }
-      });
+      // jQuery('.addtocart').click(function(e) {
+      //   e.preventDefault();
+      //   var values = [];
+      //   $(".cookie-quantity").each(function() {
+      //     if (parseInt($(this).text()) > 0)
+      //       values.push($(this).text() + " "+ $(this).attr('id').split('-')[0].toUpperCase());
+      //   });
+      //
+      //   $("#box-contents").val(values.join());
+      //
+      //   Shopify.addItemFromFormStart('add-item-form', {{ product.id }});
+      //   //$("#add-item-form").submit();
+      // });
     </script>
     {% else %}
     <br>

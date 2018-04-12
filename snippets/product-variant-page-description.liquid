@@ -136,6 +136,8 @@
     <input type="hidden" name="id" value="{{ product.variants[0].id }}" />
     {% endunless %}
 
+    {% include 'hulkcode_options' %}
+
     <div class="divider divider--sm"></div>
     <div class="wrapper">
       <div class="pull-left hide"><span class="qty-label">{{ 'products.product.quantity' | t }}</span></div>
@@ -147,7 +149,7 @@
         e.preventDefault();
         Shopify.addItemFromFormStart('add-item-form', {{ product.id }});
                                      });
-    </script>  
+    </script>
     {% else %}
     <br>
     <div class="pull-left"><button disabled class="btn btn--ys btn--xxl">{{ 'products.product.unavailable' | t }}</button></div>

@@ -175,6 +175,8 @@
     <input type="hidden" name="id" value="{{ product.variants[0].id }}" />
     {% endunless %}
 
+    {% include 'hulkcode_options' %}
+
     <div class="divider divider--sm"></div>
     <div class="wrapper">
       <div class="pull-left"><span class="qty-label">{{ 'products.product.quantity' | t }}</span></div>
@@ -182,10 +184,10 @@
       <div class="pull-left"><button type="submit" class="btn btn--ys btn--xxl addtocart">{{ 'products.product.add_to_cart_html' | t }}</button></div>
     </div>
     <script>
-      jQuery('.addtocart').click(function(e) {
-        e.preventDefault();
-        Shopify.addItemFromFormStart('add-item-form', {{ product.id }});
-                                     });
+      // jQuery('.addtocart').click(function(e) {
+      //   e.preventDefault();
+      //   Shopify.addItemFromFormStart('add-item-form', {{ product.id }});
+      // });
     </script>
     {% else %}
     <br>

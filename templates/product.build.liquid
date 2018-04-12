@@ -14,7 +14,7 @@
 <div itemscope itemtype="http://schema.org/Product">
   <meta itemprop="name" content="{{ product.title }}">
   <meta itemprop="url" content="{{ shop.url }}{{ product.url }}">
-  <meta itemprop="image" content="{{ product.featured_image.src | img_url: '800x' }}">  
+  <meta itemprop="image" content="{{ product.featured_image.src | img_url: '800x' }}">
 
   {% if settings.product_page_design == "default" %}
   <section class="content offset-top-0">
@@ -84,7 +84,7 @@
         <div class="{% if settings.upsell_collection_title_center %}carousel-products__button{% else %}carousel-products__center{% endif %} pull-right"> <span class="btn-prev"></span> <span class="btn-next"></span> </div>
         <h2 class="{% if settings.upsell_collection_title_center %}text-center text-uppercase  title-under{% else %}text-left text-uppercase title-under{% endif %}">{{ settings.product_upsell_collection_title }}</h2>
       </div>
-      <!-- /title --> 
+      <!-- /title -->
 
       <!-- carousel -->
       <div class="carousel-products row" id="carouselRelated">
@@ -93,7 +93,7 @@
         {% include "product-grid-item" collection: selected_collection %}
         </div>{% endif %}{% endfor %}
       </div>
-      <!-- /carousel --> 
+      <!-- /carousel -->
     </div>
   </section>
   <!-- /related products -->

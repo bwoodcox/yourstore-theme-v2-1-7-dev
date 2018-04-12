@@ -37,22 +37,44 @@
                 {{ item.title }}
                 {% assign property_size = item.properties | size %}
                 {% if property_size > 0 %}
+                  <div class="cart__meta-text">
                   {% for p in item.properties %}
+                    {%- if p.first.first == '_' -%}{%- continue -%}{%- endif -%}
                     {% assign first_character_in_key = p.first | truncate: 1, '' %}
                     {% unless p.last == blank or first_character_in_key == '_' %}
-                      <br>{{ p.first }}:
-                      {% if p.last contains '/uploads/' %}
-                        <a class="lightbox" href="{{ p.last }}">{{ p.last | split: '/' | last }}</a>
-                      {% else %}
-                        <br>
-                        {% assign cookies = p.last | split: ',' %}
-                        {% for cookie in cookies %}
-                		  {{ cookie }}<br>
+                    <div class="cart-property">
+                      <span class="hulkapps_option_name">{{ p.first }}:</span>
+                      {% if p.last contains ',' %}
+                        <div>
+                        {% assign box_contents = p.last | split: ',' %}
+                        {% for box_content in box_contents %}
+                          {{ box_content }}<br />
                         {% endfor %}
+                        </div>
+                      {% elsif p.last contains '/uploads/' or p.last contains '.jpg' or p.last contains '.png' or p.last contains '.jpeg' or p.last contains '.svg' %}
+                        {% if p.last contains '_|_' %}
+                          {% assign propertyVal = p.last | split: '_|_' %}
+                          {% assign swatchVal = propertyVal | first | remove: 'http://' | replace: '&amp;amp;amp;', '&amp;amp;' | replace: '&amp;amp;lt;', '<' | replace: '&amp;amp;gt;', '>'  %}
+                          {% assign swatchImage = propertyVal | last %}
+                          <span class="hulkapps_option_value " style="cursor: pointer;" >
+                            <div style="width:35px;height:35px;background-image:url({{swatchImage}});background-size:cover;background-position: center center;" title="" data-placement="top" data-original-title="<div style='padding:5px 0px; text-align:center;width:170px;'><div class='swatch_tooltip_title'>{{ swatchVal }}</div><div class='swatch_tooltip_data' style='width:100%;height:150px;background-image:url({{swatchImage}});background-size:cover;background-position: center center;'></div></div>" data-html="true" data-toggle="tooltip">
+                            </div>
+                          </span>
+                          <br/>
+                        {% else %}
+                          <span class="hulkapps_option_value" >
+                            <a class="lightbox" href="{{ p.last }}">Uploaded File</a>
+                          </span>
+                          <br/>
+                        {% endif %}
+                      {% else %}
+                        <span class="hulkapps_option_value" >{{ p.last | replace: '&amp;amp;amp;', '&amp;amp;' | replace: '&amp;amp;lt;', '<' | replace: '&amp;amp;gt;', '>' }}</span>
+                          <br/>
                       {% endif %}
-                      <br>
+                    </div>
                     {% endunless %}
                   {% endfor %}
+                  </div>
                 {% endif %}
               </h5>
               <ul class="shopping-cart-table__list-parameters">
@@ -77,7 +99,9 @@
             </td>
             <td>
               <div class="shopping-cart-table__product-price unit-price">
-                {{item.price | money}}
+                <span class="hulkapps-cart-item-price" data-key="{{item.key}}">
+                  {{ item.price | money }}
+                </span>
               </div>
             </td>
             <td>
@@ -87,7 +111,9 @@
             </td>
             <td>
               <div class="shopping-cart-table__product-price subtotal">
-                {{ item.line_price | money }}
+                <span class="hulkapps-cart-item-line-price" data-key="{{item.key}}">
+                  {{ item.line_price | money }}
+                </span>
               </div>
             </td>
             <td>
@@ -129,8 +155,6 @@
       <div class="divider--md visible-sm visible-xs"></div>
       {% endif %}
 
-
-
       <div class="col-md-{% if settings.shipping_calculator %}4{% else %}8{% endif %}">
         <div class=" card card--padding">
           <h4 class="offset-1">{{ 'cart.label.note' | t }}</h4>
@@ -146,7 +170,7 @@
             <tbody>
               <tr id="subtotal">
                 <th class="text-left">{{ 'cart.general.subtotal' | t }}</th>
-                <td class="text-right">{{ cart.total_price | money }}</td>
+                <td class="text-right"><span class="hulkapps-cart-original-total">{{ cart.total_price | money }}</span></td>
               </tr>
               <tr id="tax" style="display:none">
                 <th class="text-left">{{ 'cart.general.shipping_total' | t }}</th>
@@ -156,7 +180,7 @@
             <tfoot>
               <tr id="grandtotal">
                 <th>{{ 'cart.general.total' | t }}</th>
-                <td>{{ cart.total_price | money }}</td>
+                <td><span class="hulkapps-cart-original-total">{{ cart.total_price | money }}</span></td>
               </tr>
             </tfoot>
           </table>

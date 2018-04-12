@@ -29,9 +29,10 @@
   {% endif %}
 
   {% include 'header-css' %}
-
   {{ 'vendor.js' | asset_url | script_tag }}
 
+  {% include 'hulkcode_common' %}
+  
   {{ 'jquery.cookie.js' | asset_url | script_tag }}
   {% if template contains 'customers' %}
   {{ 'shopify_common.js' | shopify_asset_url | script_tag }}
